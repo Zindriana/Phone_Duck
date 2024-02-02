@@ -28,4 +28,10 @@ public class ChatController {
     public void deleteChatRoom(@PathVariable String title){
         chatService.deleteRoom(title);
     }
+
+    @PatchMapping("/{title}")
+    public void updateChatRoom(@PathVariable String title, @RequestBody ChatRoomModel newChatRoom){
+        chatService.updateRoom(title, newChatRoom.getTitle());
+    }
+
 }

@@ -15,5 +15,6 @@ public class MessageModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    private Long roomId;
     private String message;
 }
