@@ -11,55 +11,58 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/phoneduck")
+@RequestMapping("/api/v1/phoneduck/channels")
 public class ChatController {
 
     @Autowired
     private ChatService chatService;
 
     @GetMapping
-    public List<ChatRoomModel> chatRoomList(){
+    public List<String> chatRoomList(){
         return chatService.getAllRooms();
     }
 
     @GetMapping("/{title}")
     public List<MessageModel> getMessages(@PathVariable String title){
         return chatService.getAllMessages(title);
+
     }
 
     @PostMapping
-    public void addNewChatRoom(@RequestBody ChatRoomModel chatRoomModel){
-        chatService.createRoom(chatRoomModel);
+    public ResponseEntity<Object> addNewChatRoom(@RequestBody ChatRoomModel chatRoomModel){
+        if (chatRoomModel.getTitle() != null) {
+            return chatService.createRoom(chatRoomModel);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{title}")
-    public void deleteChatRoom(@PathVariable String title){
-        chatService.deleteRoom(title);
+    public ResponseEntity<Object> deleteChatRoom(@PathVariable String title){
+        return chatService.deleteRoom(title);
     }
 
     @DeleteMapping("/{title}/{id}")
-    public void deleteMessage(@PathVariable int id){
-        chatService.deleteMessage(id);
+    public ResponseEntity<Object> deleteMessage(@PathVariable String title, @PathVariable int id){
+        return chatService.deleteMessage(id);
     }
 
     @PatchMapping("/{title}")
-    public void updateChatRoom(@PathVariable String title, @RequestBody ChatRoomModel newChatRoom){
-        chatService.updateRoom(title, newChatRoom.getTitle());
+    public ResponseEntity<Object> updateChatRoom(@PathVariable String title, @RequestBody ChatRoomModel newChatRoom){
+        return chatService.updateRoom(title, newChatRoom.getTitle());
     }
 
     @PatchMapping("/{title}/{id}")
-    public void updateMessage(@PathVariable String title, @PathVariable int id, @RequestBody MessageModel newMessage){
-        chatService.updateMessage(title, id, newMessage);
+    public ResponseEntity<Object> updateMessage(@PathVariable String title, @PathVariable int id, @RequestBody MessageModel newMessage){
+        return chatService.updateMessage(title, id, newMessage);
     }
 
 
     @PutMapping("/{title}")
     public ResponseEntity<Object> createMessage(@PathVariable String title, @RequestBody MessageModel message){
         ChatRoomModel chatRoom = chatService.findRoomByTitle(title);
-        if(chatRoom != null) {
+        if(chatRoom != null && message != null) {
             message.setChatRoom(chatRoom);
-            chatService.saveMessage(message);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return chatService.saveMessage(message);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -19,6 +19,6 @@ public class PhoneDuckApplication {
 
     @Bean
     public CommandLineRunner run(ChatRepository chatRepository){
-        return args -> chatRepository.save(new ChatRoomModel(1L, "Main Chat", null));
+        return args -> chatRepository.save(new ChatRoomModel(1L, "General Chat", null));
     }
 }

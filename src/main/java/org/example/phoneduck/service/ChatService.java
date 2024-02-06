@@ -1,3 +1,5 @@
+//202 vid delete?
+
 package org.example.phoneduck.service;
 
 import org.example.phoneduck.model.ChatRoomModel;
@@ -5,6 +7,8 @@ import org.example.phoneduck.model.MessageModel;
 import org.example.phoneduck.repository.ChatRepository;
 import org.example.phoneduck.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,63 +22,82 @@ public class ChatService {
     @Autowired
     private MessageRepository messageRepository;
 
-    public List<ChatRoomModel> getAllRooms() {
-       return chatRepository.findAll();
+    public List<String> getAllRooms() {
+        List<ChatRoomModel> chatRooms = chatRepository.findAll();
+        List<String> titles = new ArrayList<>();
+        for(ChatRoomModel chatroom: chatRooms){
+            titles.add(chatroom.getTitle());
+        }
+        return titles;
     }
 
     public ChatRoomModel findRoomByTitle(String title){
         return chatRepository.findByTitle(title);
     }
 
-    public String createRoom(ChatRoomModel chatRoomModel){
+    public ResponseEntity<Object> createRoom(ChatRoomModel chatRoomModel){
         if (chatRepository.findByTitle(chatRoomModel.getTitle()) == null) {
             chatRepository.save(chatRoomModel);
-            return "Success";
+            return new ResponseEntity<>(HttpStatus.CREATED);
         }
-        return "Failure";
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    public void deleteRoom(String title){
+    public ResponseEntity<Object> deleteRoom(String title){
         ChatRoomModel room = chatRepository.findByTitle(title);
-        if(room.getId()!=1){
+        if(room == null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        if(room.getId()!=1){ //General chat (id 1) is a permanent room
             chatRepository.delete(room);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
+        return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE); //General chat (id 1) is a permanent room
     }
 
-    public void deleteMessage(int id){
+    public ResponseEntity<Object> deleteMessage(int id){
         MessageModel message = messageRepository.findById(id);
-        messageRepository.delete(message);
-    }
-
-    public ChatRoomModel updateRoom(String title, String newTitle){
-        ChatRoomModel room = chatRepository.findByTitle(title);
-        if (room.getTitle() != null && room.getId()!=1) {
-            room.setTitle(newTitle);
+        if (message != null){
+            messageRepository.delete(message);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return chatRepository.save(room);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public MessageModel updateMessage(String title, int id, MessageModel newMessage){
+
+    public ResponseEntity<Object> updateRoom(String title, String newTitle){
+        ChatRoomModel room = chatRepository.findByTitle(title);
+        if (newTitle != null && !newTitle.equals(" ") && room.getId()!=1) {
+            room.setTitle(newTitle);
+            chatRepository.save(room);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    public ResponseEntity<Object> updateMessage(String title, int id, MessageModel newMessage){
         MessageModel message = messageRepository.findById(id);
         ChatRoomModel room = chatRepository.findByTitle(title);
         newMessage.setId((long) id);
         newMessage.setChatRoom(room);
         if (room != null && message != null){
             message = newMessage;
+            messageRepository.save(message);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return messageRepository.save(message);
-    }
-    public MessageModel saveMessage(MessageModel message){
-         return messageRepository.save(message);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    /*public List<MessageModel> getAllMessages(String title){
-        ChatRoomModel room = chatRepository.findByTitle(title);
-        List<MessageModel> messages = (List<MessageModel>) messageRepository.findByChatRoom(room);
-        return messages;
-    }*/
     public List<MessageModel> getAllMessages(String title) {
         ChatRoomModel room = chatRepository.findByTitle(title);
         return messageRepository.findAllByChatRoom(room);
+    }
+
+    public ResponseEntity<Object> saveMessage(MessageModel message){
+        if(message.getMessage() != null) {
+            messageRepository.save(message);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

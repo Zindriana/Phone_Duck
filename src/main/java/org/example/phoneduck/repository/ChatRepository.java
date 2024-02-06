@@ -1,7 +1,6 @@
 package org.example.phoneduck.repository;
 
 import org.example.phoneduck.model.ChatRoomModel;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

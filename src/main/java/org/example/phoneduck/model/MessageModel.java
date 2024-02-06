@@ -17,8 +17,7 @@ public class MessageModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne ()
-    @JoinColumn(name = "roomId")
+    @ManyToOne()
     @JsonIgnore
     private ChatRoomModel chatRoom;
 
