@@ -24,20 +24,20 @@ public class ChatController {
     }
 
     @GetMapping("/{title}")
-    public ResponseEntity<List<MessageModel>> getMessages(@PathVariable String title){
+    public ResponseEntity<?> getMessages(@PathVariable String title){
         List<MessageModel> messages = chatService.getAllMessages(title);
-        if(messages != null) {
+        if(messages != null && !messages.isEmpty()) {
             return new ResponseEntity<>(messages, HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("No messages found", HttpStatus.NOT_FOUND);
     }
 
     @PostMapping
-    public ResponseEntity<Object> addNewChatRoom(@RequestBody ChatRoomModel chatRoomModel){
-        if (chatRoomModel.getTitle() != null) {
+    public ResponseEntity<?> addNewChatRoom(@RequestBody(required = false) ChatRoomModel chatRoomModel){
+        if (chatRoomModel != null && chatRoomModel.getTitle() != null && !chatRoomModel.getTitle().trim().isEmpty()) {
             return chatService.createRoom(chatRoomModel);
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("Title cannot be empty", HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{title}")
@@ -46,29 +46,33 @@ public class ChatController {
     }
 
     @DeleteMapping("/{title}/messages/{id}")
-    public ResponseEntity<Object> deleteMessage(@PathVariable String title, @PathVariable int id){
-        return chatService.deleteMessage(title, id);
+    public ResponseEntity<?> deleteMessage(@PathVariable String title, @PathVariable int id){
+            return chatService.deleteMessage(title, id);
     }
 
     @PatchMapping("/{title}")
-    public ResponseEntity<Object> updateChatRoom(@PathVariable String title, @RequestBody ChatRoomModel newChatRoom){
-        return chatService.updateRoom(title, newChatRoom.getTitle());
+    public ResponseEntity<?> updateChatRoom(@PathVariable String title, @RequestBody(required = false) ChatRoomModel newChatRoom) {
+        if (newChatRoom != null) {
+            return chatService.updateRoom(title, newChatRoom.getTitle());
+        }
+        return new ResponseEntity<>( "The request is empty and no change is done on the chat room",
+                                    HttpStatus.BAD_REQUEST);
     }
 
     @PatchMapping("/{title}/messages/{id}")
-    public ResponseEntity<Object> updateMessage(@PathVariable String title, @PathVariable int id, @RequestBody MessageModel newMessage){
+    public ResponseEntity<Object> updateMessage(@PathVariable String title, @PathVariable int id, @RequestBody(required = false) MessageModel newMessage){
         return chatService.updateMessage(title, id, newMessage);
     }
 
 
-    @PutMapping("/{title}")
-    public ResponseEntity<Object> createMessage(@PathVariable String title, @RequestBody MessageModel message){
+    @PutMapping("/{title}") //fortsätt här med edge cases
+    public ResponseEntity<?> createMessage(@PathVariable String title, @RequestBody(required = false) MessageModel message){
         ChatRoomModel chatRoom = chatService.findRoomByTitle(title);
         if(chatRoom != null && message != null) {
             message.setChatRoom(chatRoom);
             return chatService.saveMessage(message);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>( "No chat room with that name was found",HttpStatus.NOT_FOUND);
         }
     }
 }

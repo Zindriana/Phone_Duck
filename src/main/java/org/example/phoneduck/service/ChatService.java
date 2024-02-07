@@ -36,45 +36,53 @@ public class ChatService {
     public ResponseEntity<Object> createRoom(ChatRoomModel chatRoomModel){
         if (chatRepository.findByTitle(chatRoomModel.getTitle()) == null) {
             chatRepository.save(chatRoomModel);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new ResponseEntity<>("The channel was successfully created",
+                                        HttpStatus.CREATED);
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("A chat room must have a name", HttpStatus.BAD_REQUEST);
     }
 
     public ResponseEntity<Object> deleteRoom(String title){
         ChatRoomModel room = chatRepository.findByTitle(title);
         if(room == null){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No chat room with that name was found",
+                                        HttpStatus.NOT_FOUND);
         }
         if(room.getId()!=1){ //General chat (id 1) is a permanent room
             chatRepository.delete(room);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>("The channel was successfully deleted",
+                                        HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE); //General chat (id 1) is a permanent room
+        return new ResponseEntity<>("You cannot delete the General chat",
+                                    HttpStatus.NOT_ACCEPTABLE); //General chat (id 1) is a permanent room
     }
 
-    public ResponseEntity<Object> deleteMessage(String title, int id){
+    public ResponseEntity<?> deleteMessage(String title, int id){
         ChatRoomModel room = chatRepository.findByTitle(title);
         MessageModel message = messageRepository.findById(id);
         if (message != null && room != null) {
             if (message.getChatRoom().equals(room)) {
                 messageRepository.delete(message);
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>("The message was successfully deleted", HttpStatus.OK);
             }
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("The message does not belong to the chosen chat room ",
+                                        HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("No chat room with that name was found, or did not find the chosen message-ID",
+                                    HttpStatus.NOT_FOUND);
     }
 
 
     public ResponseEntity<Object> updateRoom(String title, String newTitle){
         ChatRoomModel room = chatRepository.findByTitle(title);
-        if (newTitle != null && !newTitle.equals(" ") && room.getId()!=1) {
+        if (newTitle != null && !newTitle.trim().isEmpty() && room != null && room.getId()!=1) {
             room.setTitle(newTitle);
             chatRepository.save(room);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>("The chat room name has successfully been updated",
+                                        HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("No chat room with that name was found, or the request was empty",
+                                    HttpStatus.NOT_FOUND);
     }
 
     public ResponseEntity<Object> updateMessage(String title, int id, MessageModel newMessage){
@@ -86,11 +94,14 @@ public class ChatService {
             if (message.getChatRoom().equals(room)) {
                 message = newMessage;
                 messageRepository.save(message);
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>("The message has successfully been updated",
+                                            HttpStatus.OK);
             }
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("The message does not belong to the chosen chat room",
+                                        HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("You must choose a chat room name and a message-ID",
+                                        HttpStatus.NOT_FOUND);
     }
 
     public List<MessageModel> getAllMessages(String title) {
@@ -104,8 +115,8 @@ public class ChatService {
     public ResponseEntity<Object> saveMessage(MessageModel message){
         if(message.getMessage() != null) {
             messageRepository.save(message);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new ResponseEntity<>("The message was successfully created", HttpStatus.CREATED);
         }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("The message is null",HttpStatus.BAD_REQUEST);
     }
 }
