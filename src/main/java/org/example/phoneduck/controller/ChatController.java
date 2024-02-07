@@ -18,14 +18,18 @@ public class ChatController {
     private ChatService chatService;
 
     @GetMapping
-    public List<String> chatRoomList(){
-        return chatService.getAllRooms();
+    public ResponseEntity<List<String>> chatRoomList(){
+        List<String> chatRooms = chatService.getAllRooms();
+        return new ResponseEntity<>(chatRooms, HttpStatus.OK);
     }
 
     @GetMapping("/{title}")
-    public List<MessageModel> getMessages(@PathVariable String title){
-        return chatService.getAllMessages(title);
-
+    public ResponseEntity<List<MessageModel>> getMessages(@PathVariable String title){
+        List<MessageModel> messages = chatService.getAllMessages(title);
+        if(messages != null) {
+            return new ResponseEntity<>(messages, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PostMapping
@@ -41,9 +45,9 @@ public class ChatController {
         return chatService.deleteRoom(title);
     }
 
-    @DeleteMapping("/{title}/{id}")
+    @DeleteMapping("/{title}/messages/{id}")
     public ResponseEntity<Object> deleteMessage(@PathVariable String title, @PathVariable int id){
-        return chatService.deleteMessage(id);
+        return chatService.deleteMessage(title, id);
     }
 
     @PatchMapping("/{title}")
@@ -51,7 +55,7 @@ public class ChatController {
         return chatService.updateRoom(title, newChatRoom.getTitle());
     }
 
-    @PatchMapping("/{title}/{id}")
+    @PatchMapping("/{title}/messages/{id}")
     public ResponseEntity<Object> updateMessage(@PathVariable String title, @PathVariable int id, @RequestBody MessageModel newMessage){
         return chatService.updateMessage(title, id, newMessage);
     }

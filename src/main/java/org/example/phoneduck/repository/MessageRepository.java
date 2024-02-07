@@ -10,7 +10,8 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<MessageModel, Long> {
 
-    MessageModel findById(int id);
+    MessageModel findById(int id); //It became problems later in the program when the parameter were a Long.
+                                    //Solved it by using int instead
 
     List<MessageModel> findAllByChatRoom(ChatRoomModel byTitle);
 }

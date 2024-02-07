@@ -1,5 +1,3 @@
-//202 vid delete?
-
 package org.example.phoneduck.service;
 
 import org.example.phoneduck.model.ChatRoomModel;
@@ -55,11 +53,15 @@ public class ChatService {
         return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE); //General chat (id 1) is a permanent room
     }
 
-    public ResponseEntity<Object> deleteMessage(int id){
+    public ResponseEntity<Object> deleteMessage(String title, int id){
+        ChatRoomModel room = chatRepository.findByTitle(title);
         MessageModel message = messageRepository.findById(id);
-        if (message != null){
-            messageRepository.delete(message);
-            return new ResponseEntity<>(HttpStatus.OK);
+        if (message != null && room != null) {
+            if (message.getChatRoom().equals(room)) {
+                messageRepository.delete(message);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
@@ -81,16 +83,22 @@ public class ChatService {
         newMessage.setId((long) id);
         newMessage.setChatRoom(room);
         if (room != null && message != null){
-            message = newMessage;
-            messageRepository.save(message);
-            return new ResponseEntity<>(HttpStatus.OK);
+            if (message.getChatRoom().equals(room)) {
+                message = newMessage;
+                messageRepository.save(message);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     public List<MessageModel> getAllMessages(String title) {
         ChatRoomModel room = chatRepository.findByTitle(title);
-        return messageRepository.findAllByChatRoom(room);
+        if(room != null) {
+            return messageRepository.findAllByChatRoom(room);
+        }
+        return null;
     }
 
     public ResponseEntity<Object> saveMessage(MessageModel message){
