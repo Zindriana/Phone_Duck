@@ -55,7 +55,7 @@ public class ChatController {
         if (newChatRoom != null) {
             return chatService.updateRoom(title, newChatRoom.getTitle());
         }
-        return new ResponseEntity<>( "The request is empty and no change is done on the chat room",
+        return new ResponseEntity<>( "The request is empty and no change is being done to the chat room " + title,
                                     HttpStatus.BAD_REQUEST);
     }
 
@@ -68,11 +68,13 @@ public class ChatController {
     @PutMapping("/{title}") //fortsätt här med edge cases
     public ResponseEntity<?> createMessage(@PathVariable String title, @RequestBody(required = false) MessageModel message){
         ChatRoomModel chatRoom = chatService.findRoomByTitle(title);
-        if(chatRoom != null && message != null) {
-            message.setChatRoom(chatRoom);
-            return chatService.saveMessage(message);
-        } else {
-            return new ResponseEntity<>( "No chat room with that name was found",HttpStatus.NOT_FOUND);
+        if(chatRoom != null) {
+            if (message != null) {
+                message.setChatRoom(chatRoom);
+                return chatService.saveMessage(message);
+            }
+            return new ResponseEntity<>("The request was null", HttpStatus.BAD_REQUEST);
         }
+        return new ResponseEntity<>( "No chat room with the name " + title + " was found", HttpStatus.NOT_FOUND);
     }
 }
